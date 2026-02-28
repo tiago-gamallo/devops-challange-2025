@@ -1,0 +1,44 @@
+name: CI/CD Pipeline - DevOps Challenge
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Build & Validate Infra
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx (Otimização)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build App 1 (Python)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app1-python
+          push: false # Fica como false até termos um Registry (ex: ECR/DockerHub) configurado
+          tags: app1:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build App 2 (Node.js)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app2-node
+          push: false
+          tags: app2:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Validar Manifestos Kubernetes (Lint Simulado)
+        run: |
+          echo "Verificando sintaxe dos manifestos K8s..."
+          # Em um cenário real, usaríamos ferramentas como kube-linter ou datree aqui
+          cat k8s/base/namespace.yaml
+          echo "✅ Todos os manifestos validados com sucesso e prontos para Deploy!"

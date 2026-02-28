@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: devops-challenge
+data:
+  nginx.conf: |
+    worker_processes auto;
+    events { worker_connections 1024; }
+    http {
+        proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=meu_cache:10m max_size=1g inactive=60m use_temp_path=off;
+        
+        # O Nginx vai resolver o nome dos Services do Kubernetes via DNS interno
+        upstream app1 { server app1-service:5000; }
+        upstream app2 { server app2-service:3000; }
+        
+        server {
+            listen 80;
+            add_header X-Cache-Status $upstream_cache_status;
+            proxy_ignore_headers Cache-Control Expires;
+            
+            location /app1/ {
+                proxy_pass http://app1/;
+                proxy_cache meu_cache;
+                proxy_cache_valid 200 10s;
+            }
+            
+            location /app2/ {
+                proxy_pass http://app2/;
+                proxy_cache meu_cache;
+                proxy_cache_valid 200 1m;
+            }
+        }
+    }

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+  namespace: devops-challenge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-proxy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: nginx-cache-volume
+          mountPath: /var/cache/nginx
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: nginx-config-volume
+        configMap:
+          name: nginx-config
+      - name: nginx-cache-volume
+        emptyDir: {} # Diretório efêmero no Node para o cache do Nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: devops-challenge
+spec:
+  type: NodePort # Expondo para acesso externo. Em produção cloud seria tipo: LoadBalancer
+  selector:
+    app: nginx-proxy
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30080
