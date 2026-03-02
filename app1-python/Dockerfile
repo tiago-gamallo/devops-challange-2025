@@ -17,5 +17,4 @@ USER appuser
 
 EXPOSE 5000
 
-# Usando Gunicorn para produção (4 workers)
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "app:app"]

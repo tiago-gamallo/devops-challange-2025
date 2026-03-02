@@ -9,7 +9,6 @@ services:
     networks:
       - backend
     healthcheck:
-      # Usando python para fazer o request, já que o slim pode não ter curl/wget
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/')\""]
       interval: 10s
       timeout: 5s
@@ -24,7 +23,6 @@ services:
     networks:
       - backend
     healthcheck:
-      # Usando wget nativo do alpine
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
       interval: 10s
       timeout: 5s
@@ -38,7 +36,6 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Volume efêmero para alta performance do cache
       - tmpfs_cache:/var/cache/nginx
     depends_on:
       app1:
@@ -65,7 +62,7 @@ services:
     container_name: grafana
     restart: unless-stopped
     ports:
-      - "3000:3000" # Importante: evite conflito local se você rodar algo na porta 3000
+      - "3000:3000" 
     networks:
       - backend
       - frontend

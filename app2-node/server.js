@@ -15,7 +15,6 @@ const requestsTotal = new client.Counter({
 });
 
 app.use((req, res, next) => {
-  // Boa prática: não contar as chamadas do próprio Prometheus para não sujar os dados de tráfego real
   if (req.path !== '/metrics') {
     requestsTotal.inc();
   }

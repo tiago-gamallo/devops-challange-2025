@@ -36,7 +36,7 @@ spec:
         configMap:
           name: nginx-config
       - name: nginx-cache-volume
-        emptyDir: {} # Diretório efêmero no Node para o cache do Nginx
+        emptyDir: {} # Diretório no Node para o cache do Nginx
 ---
 apiVersion: v1
 kind: Service
@@ -44,7 +44,7 @@ metadata:
   name: nginx-service
   namespace: devops-challenge
 spec:
-  type: NodePort # Expondo para acesso externo. Em produção cloud seria tipo: LoadBalancer
+  type: NodePort # Expondo para acesso externo. Em produção ficaria em um LoadBalancer
   selector:
     app: nginx-proxy
   ports:

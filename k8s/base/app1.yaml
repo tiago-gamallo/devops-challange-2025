@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: app1
-        # Em um cenário real, aqui seria a URL do seu registry, ex: xxx.dkr.ecr.sa-east-1.amazonaws.com/app1:latest
+        # Em um cenário real, aqui seria a URL do registry
         image: app1:latest 
         imagePullPolicy: IfNotPresent
         ports:
