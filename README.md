@@ -19,18 +19,74 @@ Atendendo estritamente ao requisito de "iniciar e rodar com o menor número de c
 
 
 ## Testando a Camada de Cache
-Para verificar o cache atuando, você pode usar o curl observando o header customizado X-Cache-Status implementado no Nginx:
+Para verificar o roteamento correto das aplicações e o cache atuando, utilize o comando curl -i (que exibe os cabeçalhos e o corpo da resposta). Observe o header customizado X-Cache-Status implementado no Nginx.
 
-1. App 1 (Python) - Cache de 10s:
- ```bash
-   curl -I http://localhost/app1/time
- ```
-(Execute duas vezes rapidamente. Na segunda, você verá X-Cache-Status: HIT. Após 10s, verá um MISS ou EXPIRED e um novo horário será gerado).
+Passo 1: Testar o roteamento da App 1 (Python):
 
-2. App 2 (Node.js) - Cache de 60s:
- ```bash
-   curl -I http://localhost/app2/time
- ```
+```Bash
+curl -i http://localhost/app1/
+```
+Saída esperada (provando que o Nginx direcionou para o container correto):
+
+```
+HTTP/1.1 200 OK
+Server: nginx/1.29.5
+...
+X-Cache-Status: MISS
+
+Aplicação 1 - Python
+```
+Passo 2: Testar o cache de 10 segundos da App 1:
+
+```Bash
+curl -i http://localhost/app1/time
+```
+Saída esperada executando duas vezes seguidas (HIT indica que a resposta veio da memória do Nginx):
+
+```
+HTTP/1.1 200 OK
+Server: nginx/1.29.5
+...
+X-Cache-Status: HIT
+
+Horário atual (App1): 2026-03-02T13:53:28.964492
+```
+(No HIT o horário congela por 10 segundos. Após esse tempo, um novo MISS ou EXPIRED ocorrerá e o horário será atualizado).
+
+Passo 3: Testar o roteamento da App 2 (Node.js):
+
+```Bash
+curl -i http://localhost/app2/
+```
+Saída esperada (notando os cabeçalhos específicos do framework Express):
+
+```
+HTTP/1.1 200 OK
+Server: nginx/1.29.5
+...
+X-Powered-By: Express
+X-Cache-Status: EXPIRED
+
+Aplicação 2 - Node.js
+```
+Passo 4: Testar o cache de 60 segundos da App 2:
+
+```Bash
+curl -i http://localhost/app2/time
+```
+Saída esperada:
+
+```
+HTTP/1.1 200 OK
+Server: nginx/1.29.5
+...
+X-Powered-By: Express
+X-Cache-Status: EXPIRED
+
+Horário atual (App2): 2026-03-02T13:55:37.225Z
+```
+(A mesma lógica de validação do Python se aplica, porém o Nginx reterá essa resposta da App 2 congelada na memória por 1 minuto inteiro antes de buscar um novo horário).
+
 
 ## Desenho da Arquitetura
 A arquitetura foi desenhada para que as aplicações sejam stateless. O Nginx centraliza a responsabilidade do cache (Layer 7), permitindo escalabilidade horizontal das linguagens no backend de forma transparente.
@@ -106,4 +162,5 @@ c. Segurança de Acessos e Redes (VPC & IAM):
 d. Gestão do Nginx Proxy e Observabilidade: 
 
    *Centralizar os logs de acesso e erros do Nginx enviando-os para um agregador de logs, complementando as métricas do Prometheus/Grafana já implementadas para uma observabilidade 360º.
+
 
